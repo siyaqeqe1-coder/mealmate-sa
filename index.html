@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MealMate SA</title>
+<title>Pot & Plan</title>
+<meta name="theme-color" content="#2e7d32">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
   * { box-sizing: border-box; }
   body { font-family: sans-serif; margin: 0; background: #f6faf5; color: #1d3a24; }
@@ -37,7 +41,7 @@
 </style>
 </head>
 <body>
-<header><h1>MealMate SA</h1></header>
+<header><h1>Pot &amp; Plan</h1></header>
 <main id="app">Loading recipes…</main>
 <nav>
   <button id="navHome">🍲 Recipes</button>
@@ -51,5 +55,12 @@ window.onerror = function (m, s, l) {
 <script src="core.js?v=1"></script>
 <script src="list.js?v=1"></script>
 <script src="cart.js?v=1"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
 </body>
 </html>
