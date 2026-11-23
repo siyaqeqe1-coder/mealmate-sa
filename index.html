@@ -4,15 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pot & Plan</title>
-<meta name="theme-color" content="#2e7d32">
+<meta name="theme-color" content="#0f0b0a">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
   * { box-sizing: border-box; }
   body { font-family: sans-serif; margin: 0; background: #f6faf5; color: #1d3a24; }
-  header { background: #2e7d32; color: white; padding: 16px; text-align: center; }
-  header h1 { margin: 0; font-size: 22px; }
+  header { background: #0f0b0a; color: white; padding: 10px 16px; text-align: center; border-bottom: 3px solid #f58a1f; }
+  header img { width: 96px; height: 96px; border-radius: 16px; display: block; margin: 0 auto; }
+  header h1 { margin: 0; font-size: 22px; display: none; }
   main { padding: 16px 16px 90px; max-width: 700px; margin: 0 auto; }
   .search { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #b7d3b9; border-radius: 10px; margin-bottom: 12px; }
   .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 4px; }
@@ -41,7 +42,10 @@
 </style>
 </head>
 <body>
-<header><h1>Pot &amp; Plan</h1></header>
+<header>
+  <img src="icon-192.png" alt="Pot and Plan" onerror="this.style.display='none';document.getElementById('hname').style.display='block'">
+  <h1 id="hname">Pot &amp; Plan</h1>
+</header>
 <main id="app">Loading recipes…</main>
 <nav>
   <button id="navHome">🍲 Recipes</button>
