@@ -9,22 +9,40 @@
   body { font-family: sans-serif; margin: 0; background: #f6faf5; color: #1d3a24; }
   header { background: #2e7d32; color: white; padding: 16px; text-align: center; }
   header h1 { margin: 0; font-size: 22px; }
-  main { padding: 16px; max-width: 700px; margin: 0 auto; }
-  input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #b7d3b9; border-radius: 10px; margin-bottom: 12px; }
+  main { padding: 16px 16px 90px; max-width: 700px; margin: 0 auto; }
+  .search { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #b7d3b9; border-radius: 10px; margin-bottom: 12px; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 4px; }
+  .chip { flex: none; background: white; color: #2e7d32; border: 1px solid #2e7d32; border-radius: 20px; padding: 7px 14px; font-size: 14px; margin: 0; }
+  .chip.on { background: #2e7d32; color: white; }
   .card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.1); cursor: pointer; }
   .card h3 { margin: 0 0 6px; }
   .meta { color: #557a5b; font-size: 14px; }
-  .badge { display: inline-block; background: #fff3cd; color: #7a5b00; font-size: 12px; padding: 3px 8px; border-radius: 20px; margin-top: 6px; }
+  .badge { display: inline-block; background: #fff3cd; color: #7a5b00; font-size: 12px; padding: 3px 8px; border-radius: 20px; margin-top: 6px; margin-right: 6px; }
   .badge.ok { background: #d9f2dc; color: #1d5a24; }
-  button { background: #2e7d32; color: white; border: 0; border-radius: 10px; padding: 10px 16px; font-size: 16px; margin-bottom: 12px; }
+  .badge.cart { background: #e3f2fd; color: #0d47a1; }
+  button { background: #2e7d32; color: white; border: 0; border-radius: 10px; padding: 10px 16px; font-size: 16px; margin: 0 8px 12px 0; }
+  button.light { background: white; color: #2e7d32; border: 1px solid #2e7d32; }
+  button.danger { background: white; color: #b71c1c; border: 1px solid #b71c1c; }
   h2 { margin-top: 4px; }
   li { margin-bottom: 6px; }
   .note { background: #fff; border-left: 4px solid #2e7d32; padding: 10px; margin: 10px 0; border-radius: 6px; }
+  .item { display: flex; align-items: center; gap: 12px; background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; font-size: 17px; }
+  .item input { width: 22px; height: 22px; flex: none; }
+  .item.done span { text-decoration: line-through; color: #8aa38d; }
+  .rrow { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; }
+  .rrow button { margin: 0; padding: 6px 12px; font-size: 14px; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: white; border-top: 1px solid #cfe3d1; }
+  nav button { flex: 1; background: white; color: #2e7d32; border-radius: 0; margin: 0; padding: 16px 8px; font-size: 16px; }
+  nav button.on { background: #e8f5e9; font-weight: bold; }
 </style>
 </head>
 <body>
 <header><h1>MealMate SA</h1></header>
 <main id="app">Loading recipes…</main>
+<nav>
+  <button id="navHome">🍲 Recipes</button>
+  <button id="navCart">🛒 Shopping list <span id="count"></span></button>
+</nav>
 
 <script>
 const SUPABASE_URL = "https://vswrxwwbwjosfxqcgxds.supabase.co";
@@ -38,82 +56,62 @@ const STATUS = {
 };
 
 let recipes = [];
+let view = "list";
+let query = "";
+let activeCat = "";
 const app = document.getElementById("app");
 
+/* ---------- Saved shopping list (stays on this phone) ---------- */
+let cart = { ids: [], checked: {} };
+try {
+  const saved = JSON.parse(localStorage.getItem("mealmate_cart") || "null");
+  if (saved && Array.isArray(saved.ids) && saved.checked && typeof saved.checked === "object") cart = saved;
+} catch (e) {}
+function saveCart() {
+  try { localStorage.setItem("mealmate_cart", JSON.stringify(cart)); } catch (e) {}
+}
+
+/* ---------- Helpers ---------- */
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
-
 function textOf(x) {
   if (x == null) return "";
   if (typeof x === "string") return x;
   if (typeof x === "object") return x.text || x.step || x.instruction || x.description || x.name || JSON.stringify(x);
   return String(x);
 }
-
 function listOf(x) {
   if (!x) return [];
   if (Array.isArray(x)) return x.map(textOf).filter(Boolean);
   if (typeof x === "object") return Object.entries(x).map(([k, v]) => k + ": " + textOf(v));
   return [textOf(x)];
 }
+function fmt(n) { return String(Math.round(n * 100) / 100); }
+function inCart(id) { return cart.ids.includes(id); }
 
+function setMain(html) {
+  app.innerHTML = html;
+  document.getElementById("navHome").className = view === "cart" ? "" : "on";
+  document.getElementById("navCart").className = view === "cart" ? "on" : "";
+  document.getElementById("count").textContent = cart.ids.length ? "(" + cart.ids.length + ")" : "";
+}
+
+/* ---------- Loading ---------- */
 async function load() {
-  const select = "id,title,slug,description,cuisine,difficulty,prep_minutes,cook_minutes,base_servings,instructions,verification_status,allergen_notes,storage_notes,substitutions,recipe_ingredients(quantity,unit,preparation,is_optional,sort_order,ingredients(name))";
+  const select = "id,title,slug,description,cuisine,difficulty,prep_minutes,cook_minutes,base_servings,instructions,verification_status,allergen_notes,storage_notes,substitutions,recipe_category_links(recipe_categories(*)),recipe_ingredients(quantity,unit,preparation,is_optional,sort_order,ingredients(name))";
   const url = SUPABASE_URL + "/rest/v1/recipes?select=" + select + "&is_published=eq.true&order=title";
   try {
     const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
     if (!res.ok) throw new Error("Server said " + res.status + ": " + (await res.text()));
     recipes = await res.json();
+    recipes.forEach(r => {
+      r.cats = (r.recipe_category_links || []).map(l => l.recipe_categories).filter(Boolean)
+        .map(c => ({ slug: c.slug || c.name || c.title, name: c.name || c.title || c.slug }));
+    });
+    // forget any saved recipes that are no longer published
+    cart.ids = cart.ids.filter(id => recipes.some(r => r.id === id));
+    saveCart();
     showList();
   } catch (e) {
-    app.innerHTML = "<p>Sorry, recipes could not load.</p><p class='meta'>" + esc(e.message) + "</p>";
-  }
-}
-
-function badge(r) {
-  const ok = r.verification_status === "kitchen_tested" || r.verification_status === "chef_reviewed";
-  return "<span class='badge " + (ok ? "ok" : "") + "'>" + esc(STATUS[r.verification_status] || r.verification_status) + "</span>";
-}
-
-function showList(filter = "") {
-  const q = filter.toLowerCase();
-  const shown = recipes.filter(r => (r.title + " " + (r.description || "") + " " + (r.cuisine || "")).toLowerCase().includes(q));
-  let html = "<input id='search' placeholder='Search recipes…' value='" + esc(filter) + "'>";
-  if (!recipes.length) html += "<p>No recipes are published yet. Check back soon!</p>";
-  else if (!shown.length) html += "<p>No recipes match your search.</p>";
-  html += shown.map(r =>
-    "<div class='card' data-id='" + esc(r.id) + "'><h3>" + esc(r.title) + "</h3>" +
-    "<div class='meta'>" + esc(r.cuisine || "") + " · " + esc(r.difficulty || "") + " · " +
-    ((r.prep_minutes || 0) + (r.cook_minutes || 0)) + " min</div>" + badge(r) + "</div>"
-  ).join("");
-  app.innerHTML = html;
-  const s = document.getElementById("search");
-  s.addEventListener("input", () => { showList(s.value); const n = document.getElementById("search"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); });
-  app.querySelectorAll(".card").forEach(c => c.addEventListener("click", () => showRecipe(c.dataset.id)));
-}
-
-function showRecipe(id) {
-  const r = recipes.find(x => x.id === id);
-  if (!r) return;
-  const ings = (r.recipe_ingredients || []).slice().sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-  let html = "<button id='back'>← Back</button><h2>" + esc(r.title) + "</h2>" + badge(r);
-  html += "<p>" + esc(r.description || "") + "</p>";
-  html += "<p class='meta'>Prep " + (r.prep_minutes ?? "?") + " min · Cook " + (r.cook_minutes ?? "?") + " min · Serves " + (r.base_servings ?? "?") + " · " + esc(r.difficulty || "") + "</p>";
-  html += "<h3>Ingredients</h3><ul>" + ings.map(i =>
-    "<li>" + esc([i.quantity, i.unit, i.ingredients && i.ingredients.name].filter(x => x != null && x !== "").join(" ")) +
-    (i.preparation ? ", " + esc(i.preparation) : "") + (i.is_optional ? " (optional)" : "") + "</li>").join("") + "</ul>";
-  html += "<h3>Method</h3><ol>" + listOf(r.instructions).map(s => "<li>" + esc(s) + "</li>").join("") + "</ol>";
-  const subs = listOf(r.substitutions);
-  if (subs.length) html += "<h3>Substitutions</h3><ul>" + subs.map(s => "<li>" + esc(s) + "</li>").join("") + "</ul>";
-  if (r.allergen_notes) html += "<div class='note'><b>Allergens:</b> " + esc(r.allergen_notes) + "</div>";
-  if (r.storage_notes) html += "<div class='note'><b>Storage:</b> " + esc(r.storage_notes) + "</div>";
-  app.innerHTML = html;
-  document.getElementById("back").addEventListener("click", () => showList());
-  window.scrollTo(0, 0);
-}
-
-load();
-</script>
-</body>
-</html>
+    app.innerHTML = "<p>Sorry, recipes could not load.</p><p class='meta'>" + esc(e.message) + "
