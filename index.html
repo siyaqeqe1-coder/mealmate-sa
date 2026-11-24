@@ -8,38 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192-1.png">
 <link rel="apple-touch-icon" href="apple-touch-icon-1.png">
-<style>
-  * { box-sizing: border-box; }
-  body { font-family: sans-serif; margin: 0; background: #f6faf5; color: #1d3a24; }
-  header { background: #0f0b0a; color: white; padding: 10px 16px; text-align: center; border-bottom: 3px solid #f58a1f; }
-  header img { width: 96px; height: 96px; border-radius: 16px; display: block; margin: 0 auto; }
-  header h1 { margin: 0; font-size: 22px; display: none; }
-  main { padding: 16px 16px 90px; max-width: 700px; margin: 0 auto; }
-  .search { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #b7d3b9; border-radius: 10px; margin-bottom: 12px; }
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 4px; }
-  .chip { flex: none; background: white; color: #2e7d32; border: 1px solid #2e7d32; border-radius: 20px; padding: 7px 14px; font-size: 14px; margin: 0; }
-  .chip.on { background: #2e7d32; color: white; }
-  .card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.1); cursor: pointer; }
-  .card h3 { margin: 0 0 6px; }
-  .meta { color: #557a5b; font-size: 14px; }
-  .badge { display: inline-block; background: #fff3cd; color: #7a5b00; font-size: 12px; padding: 3px 8px; border-radius: 20px; margin-top: 6px; margin-right: 6px; }
-  .badge.ok { background: #d9f2dc; color: #1d5a24; }
-  .badge.cart { background: #e3f2fd; color: #0d47a1; }
-  button { background: #2e7d32; color: white; border: 0; border-radius: 10px; padding: 10px 16px; font-size: 16px; margin: 0 8px 12px 0; }
-  button.light { background: white; color: #2e7d32; border: 1px solid #2e7d32; }
-  button.danger { background: white; color: #b71c1c; border: 1px solid #b71c1c; }
-  h2 { margin-top: 4px; }
-  li { margin-bottom: 6px; }
-  .note { background: #fff; border-left: 4px solid #2e7d32; padding: 10px; margin: 10px 0; border-radius: 6px; }
-  .item { display: flex; align-items: center; gap: 12px; background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; font-size: 17px; }
-  .item input { width: 22px; height: 22px; flex: none; }
-  .item.done span { text-decoration: line-through; color: #8aa38d; }
-  .rrow { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; }
-  .rrow button { margin: 0; padding: 6px 12px; font-size: 14px; }
-  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: white; border-top: 1px solid #cfe3d1; }
-  nav button { flex: 1; background: white; color: #2e7d32; border-radius: 0; margin: 0; padding: 16px 8px; font-size: 16px; }
-  nav button.on { background: #e8f5e9; font-weight: bold; }
-</style>
+<link rel="stylesheet" href="style.css?v=1">
 </head>
 <body>
 <header>
